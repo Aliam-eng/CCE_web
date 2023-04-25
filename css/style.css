@@ -1,0 +1,52 @@
+
+*{
+    padding:0px;
+    margin: 0px;
+    box-sizing: border-box;
+}
+a{
+    text-decoration: none;
+}
+body{
+    background-color:whitesmoke;
+    font-family: tahoma;
+}
+
+header div{
+    padding: 20px;
+}
+
+header a{
+    color: black;
+}
+
+header{
+    background-color: aqua;
+    display: flex;
+    color: white;
+    justify-content: center;
+    align-items: center;
+}
+
+footer{
+    padding: 20px;
+    text-align: center;
+    background-color:aqua;
+}
+
+input{
+    margin:4px;
+    padding:8px;
+    width:100%;
+}
+
+textarea{
+    margin:4px;
+    padding:8px;
+    width:100%;
+}
+
+button{
+    padding:10px;
+    cursor: pointer;
+}
