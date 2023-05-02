@@ -1,7 +1,74 @@
 <?php
     session_start();
     print_r($_SESSION['user_info']);
-    
+
+    if($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['action']) && $_POST['action'] == 'delete')
+	{
+		//delete your profile
+		$id = $_SESSION['user_info']['id'];
+		$query = "delete from users where id = '$id' limit 1";
+		$result = mysqli_query($con,$query);
+
+		if(file_exists($_SESSION['user_info']['image'])){
+			unlink($_SESSION['user_info']['image']);
+		}
+
+		$query = "delete from posts where user_id = '$id'";
+		$result = mysqli_query($con,$query);
+
+		header("Location: index.php");
+		die;
+
+	}
+elseif($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['username']))
+{
+    //profile edit
+    $image_added = false;
+    if(!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0 && $_FILES['image']['type'] == "image/jpeg"
+    ){
+        //file was uploaded
+        $folder = "images/";
+        if(!file_exists($folder))
+        {
+            mkdir($folder,0777,true);
+        }
+
+        $image = $folder . $_FILES['image']['name'];
+        move_uploaded_file($_FILES['image']['tmp_name'], $image);
+
+        if(file_exists($_SESSION['user_info']['image'])){
+            unlink($_SESSION['user_info']['image']);
+        }
+
+        $image_added = true;
+    }
+
+    $username = addslashes($_POST['username']);
+    $email = addslashes($_POST['email']);
+    $password = addslashes($_POST['password']);
+    $id = $_SESSION['user_info']['id'];
+
+    if($image_added == true){
+        $query = "update users set name = '$username',email = '$email',password = '$password',image = '$image' where id = '$id' limit 1";
+    }else{
+        $query = "update users set name = '$username',email = '$email',password = '$password' where id = '$id' limit 1";
+    }
+
+    $result = mysqli_query($con,$query);
+
+    $query = "select * from users where id = '$id' limit 1";
+    $result = mysqli_query($con,$query);
+
+    if(mysqli_num_rows($result) > 0){
+
+        $_SESSION['user_info'] = mysqli_fetch_assoc($result);
+    }
+
+    header("Location: profile.php");
+    die;
+}
+
+
 
 
 ?>
