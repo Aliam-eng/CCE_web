@@ -1,4 +1,5 @@
 <?php
+    include('db_config/connect.php');
     session_start();
     print_r($_SESSION['user_info']);
 
@@ -49,9 +50,9 @@ elseif($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['username']))
     $id = $_SESSION['user_info']['id'];
 
     if($image_added == true){
-        $query = "update users set name = '$username',email = '$email',password = '$password',image = '$image' where id = '$id' limit 1";
+        $query = "update users set name = '$username',email = '$email',pass = '$password',image = '$image' where id = '$id' limit 1";
     }else{
-        $query = "update users set name = '$username',email = '$email',password = '$password' where id = '$id' limit 1";
+        $query = "update users set name = '$username',email = '$email',pass = '$password' where id = '$id' limit 1";
     }
 
     $result = mysqli_query($con,$query);
@@ -63,6 +64,34 @@ elseif($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['username']))
 
         $_SESSION['user_info'] = mysqli_fetch_assoc($result);
     }
+
+    header("Location: profile.php");
+    die;
+}
+elseif($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['post']))
+{
+    //adding post
+    $image = "";
+    if(!empty($_FILES['image']['name']) && $_FILES['image']['error'] == 0 && $_FILES['image']['type'] == "image/jpeg"){
+        //file was uploaded
+        $folder = "images/";
+        if(!file_exists($folder))
+        {
+            mkdir($folder,0777,true);
+        }
+
+        $image = $folder . $_FILES['image']['name'];
+        move_uploaded_file($_FILES['image']['tmp_name'], $image);
+
+    }
+
+    $post = addslashes($_POST['post']);
+    $user_id = $_SESSION['user_info']['id'];
+    $date = date('Y-m-d H:i:s');
+
+    $query = "insert into posts (user_id, desc1 , image, date) values ('$user_id','$post','$image','$date')";
+
+    $result = mysqli_query($con,$query);
 
     header("Location: profile.php");
     die;
@@ -141,6 +170,72 @@ elseif($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['username']))
 
 				</div>
 				<br>
+                <hr>
+                <hr>
+                <h5>Create a post</h5>
+				<form method="post" enctype="multipart/form-data" style="margin: auto;padding:10px;">
+					
+					image: <input type="file" name="image"><br>
+					<textarea name="post" rows="8"></textarea><br>
+
+					<button>Post</button>
+				</form>
+
+				<hr>
+                <hr>
+                <posts>
+					<?php 
+						$id = $_SESSION['user_info']['id'];
+						$query = "select * from posts where user_id = '$id' order by id desc limit 10";
+
+						$result = mysqli_query($con,$query);
+					?>
+
+					<?php if(mysqli_num_rows($result) > 0):?>
+
+						<?php while ($row = mysqli_fetch_assoc($result)):?>
+
+							<?php 
+								$user_id = $row['user_id'];
+								$query = "select name,image from users where id = '$user_id' limit 1";
+								$result2 = mysqli_query($con,$query);
+
+								$user_row = mysqli_fetch_assoc($result2);
+							?>
+							<div style="background-color:white;display: flex;border:solid thin #aaa;border-radius: 10px;margin-bottom: 10px;margin-top: 10px;">
+								<div style="flex:1;text-align: center;">
+									<img src="<?=$user_row['image']?>" style="border-radius:50%;margin:10px;width:100px;height:100px;object-fit: cover;">
+									<br>
+									<?=$user_row['name']?>
+								</div>
+								<div style="flex:8">
+									<?php if(file_exists($row['image'])):?>
+										<div style="">
+											<img src="<?=$row['image']?>" style="width:100%;height:200px;object-fit: cover;">
+										</div>
+									<?php endif;?>
+									<div>
+										<div style="color:#888"><?=date("jS M, Y",strtotime($row['date']))?></div>
+										<?php echo nl2br(htmlspecialchars($row['desc1']))?>
+
+										<br><br>
+
+										<a href="profile1.php?action=post_edit&id=<?= $row['id']?>">
+											<button>Edit</button>
+										</a>
+
+										<a href="profile1.php?action=post_delete&id=<?= $row['id']?>">
+											<button>Delete</button>
+										</a>
+										<br><br>
+									</div>
+								</div>
+								
+							</div>
+						<?php endwhile;?>
+					<?php endif;?>
+				</posts> 
+
                 <?php endif;?>
 
     <?php require "footer.php";?>
